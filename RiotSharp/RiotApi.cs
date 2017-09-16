@@ -26,7 +26,6 @@ namespace RiotSharp
     public class RiotApi : IRiotApi
     {
         #region Private Fields
-
         private const string SummonerRootUrl = "/lol/summoner/v3/summoners";
         private const string SummonerByAccountIdUrl = "/by-account/{0}";
         private const string SummonerByNameUrl = "/by-name/{0}";
@@ -72,7 +71,6 @@ namespace RiotSharp
         private readonly IRateLimitedRequester requester;
 
         private static RiotApi instance;
-
         #endregion
 
         /// <summary>
@@ -145,7 +143,6 @@ namespace RiotSharp
 #pragma warning disable CS1591
 
         #region Summoner
-
         public Summoner GetSummonerByAccountId(Region region, long accountId)
         {
             var json = requester.CreateGetRequest(
@@ -217,11 +214,9 @@ namespace RiotSharp
             }
             return obj;
         }
-
         #endregion
 
         #region Champion
-
         public List<Champion> GetChampions(Region region, bool freeToPlay = false)
         {
             var json = requester.CreateGetRequest(ChampionsUrl, region,
@@ -249,11 +244,9 @@ namespace RiotSharp
             var json = await requester.CreateGetRequestAsync(ChampionsUrl + string.Format(IdUrl, championId), region);
             return await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<Champion>(json));
         }
-
         #endregion
 
         #region Masteries
-
         public List<MasteryPage> GetMasteryPages(Region region, long summonerId)
         {
             var json = requester.CreateGetRequest(string.Format(MasteriesUrl, summonerId), region);
@@ -268,11 +261,9 @@ namespace RiotSharp
 
             return await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<MasteryPages>(json).Pages);
         }
-
         #endregion
 
         #region Runes
-
         public Dictionary<long, List<RunePage>> GetRunePages(Region region, List<long> summonerIds)
         {
             var dict = new Dictionary<long, List<RunePage>>();
@@ -306,11 +297,9 @@ namespace RiotSharp
             await Task.WhenAll(tasks);
             return tasks.SelectMany(task => task.Result).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
-
         #endregion
 
         #region League
-
         public List<League> GetLeagues(Region region, long summonerId)
         {
             var json = requester.CreateGetRequest(LeagueRootUrl + string.Format(LeagueBySummonerUrl, summonerId),
@@ -379,11 +368,9 @@ namespace RiotSharp
                     : null);
             return JsonConvert.DeserializeObject<MatchDetail>(json);
         }
-
         #endregion
 
         #region Match
-
         public async Task<MatchDetail> GetMatchAsync(Region region, long matchId, bool includeTimeline = false)
         {
             var json = await requester.CreateGetRequestAsync(
@@ -488,11 +475,9 @@ namespace RiotSharp
             return (await Task.Factory.StartNew(() =>
                 JsonConvert.DeserializeObject<RecentGames>(json))).Games;
         }
-
         #endregion
 
         #region Spectator
-
         public CurrentGame GetCurrentGame(Platform platform, long summonerId)
         {
             var json = requester.CreateGetRequest(
@@ -524,11 +509,9 @@ namespace RiotSharp
                 region);
             return (await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<FeaturedGames>(json)));
         }
-
         #endregion
 
         #region Champion Mastery
-
         public ChampionMastery GetChampionMastery(Region region, long summonerId, long championId)
         {
             var requestUrl = string.Format(ChampionMasteryBySummonerUrl, summonerId, championId);
@@ -576,11 +559,9 @@ namespace RiotSharp
             var json = requester.CreateGetRequest(ChampionMasteryRootUrl + requestUrl, region);
             return (await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<int>(json)));
         }
-
         #endregion
 
         #region Helpers
-
         private Dictionary<long, List<MasteryPage>> ConstructMasteryDict(Dictionary<string, MasteryPages> dict)
         {
             var returnDict = new Dictionary<long, List<MasteryPage>>();
@@ -610,7 +591,6 @@ namespace RiotSharp
                 .Select(x => x.Select(v => v.Value).ToList())
                 .ToList();
         }
-
         #endregion
 
 #pragma warning restore
