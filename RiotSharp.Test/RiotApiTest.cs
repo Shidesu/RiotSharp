@@ -282,7 +282,7 @@ namespace RiotSharp.Test
             {
                 var leagues = api.GetLeaguesAsync(RiotApiTestBase.summonersRegion, RiotApiTestBase.summonerIds.FirstOrDefault());
 
-                Assert.IsTrue(leagues.Count > 0);
+                Assert.IsTrue(leagues.Result.Count > 0);
             });
         }
 
@@ -315,7 +315,7 @@ namespace RiotSharp.Test
             {
                 var leagues = api.GetLeaguePositions(RiotApiTestBase.summonersRegion, RiotApiTestBase.summonerIds.FirstOrDefault());
 
-                Assert.IsTrue(leagues.Result.Count > 0);
+                Assert.IsTrue(leagues.Count > 0);
             });
         }
 
@@ -327,7 +327,7 @@ namespace RiotSharp.Test
             {
                 var leagues = api.GetLeaguePositionsAsync(RiotApiTestBase.summonersRegion, RiotApiTestBase.summonerIds.FirstOrDefault());
 
-                Assert.IsTrue(leagues.Count > 0);
+                Assert.IsTrue(leagues.Result.Count > 0);
             });
         }
 
