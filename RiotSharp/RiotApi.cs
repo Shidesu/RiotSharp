@@ -9,7 +9,6 @@ using RiotSharp.Http.Interfaces;
 using RiotSharp.Interfaces;
 using RiotSharp.LeagueEndpoint;
 using RiotSharp.MatchEndpoint;
-using RiotSharp.RunesEndpoint;
 using RiotSharp.SummonerEndpoint;
 using System;
 using System.Collections.Generic;
@@ -32,10 +31,13 @@ namespace RiotSharp
         private const string SummonerByNameUrl = "/by-name/{0}";
         private const string SummonerBySummonerIdUrl = "/{0}";
 
-        private const string PlatformRootUrl = "/lol/platform/v3";
-        private const string MasteriesUrl = "/masteries/by-summoner/{0}";
-        private const string RunesUrl = "/runes/by-summoner/{0}";
-        private const string ChampionsUrl = "/champions";
+        private const string NamesUrl = "/{0}/name";
+        private const string MasteriesUrl = "/lol/platform/v3/masteries/by-summoner/{0}";
+
+        private const string RunesRootUrl = "/api/lol/{0}/v1.4/summoner";
+        private const string RunesUrl = "/{0}/runes";
+
+        private const string ChampionsUrl = "/lol/platform/v3/champions";
 
         private const string GameRootUrl = "/api/lol/{0}/v1.3/game";
         private const string RecentGamesUrl = "/by-summoner/{0}/recent";
@@ -64,12 +66,7 @@ namespace RiotSharp
         private const int MaxNrSummoners = 40;
 
         private const int MaxNrMasteryPages = 40;
-<<<<<<< HEAD
         private const int MaxNrRunePages = 40;
-=======
-        private const int MaxNrLeagues = 10;
-        private const int MaxNrEntireLeagues = 10;
->>>>>>> develop
 
         private readonly IRateLimitedRequester requester;
 
@@ -222,25 +219,15 @@ namespace RiotSharp
         #region Champion
         public List<Champion> GetChampions(Region region, bool freeToPlay = false)
         {
-<<<<<<< HEAD
             var json = requester.CreateGetRequest(ChampionsUrl, region,
                 new List<string> {string.Format("freeToPlay={0}", freeToPlay ? "true" : "false")});
-=======
-            var json = requester.CreateGetRequest(PlatformRootUrl + ChampionsUrl, region,
-                new List<string> { string.Format("freeToPlay={0}", freeToPlay ? "true" : "false") });
->>>>>>> develop
             return JsonConvert.DeserializeObject<ChampionList>(json).Champions;
         }
 
         public async Task<List<Champion>> GetChampionsAsync(Region region, bool freeToPlay = false)
         {
-<<<<<<< HEAD
             var json = await requester.CreateGetRequestAsync(ChampionsUrl, region,
                 new List<string> {string.Format("freeToPlay={0}", freeToPlay ? "true" : "false")});
-=======
-            var json = await requester.CreateGetRequestAsync(PlatformRootUrl + ChampionsUrl, region,
-                new List<string> { string.Format("freeToPlay={0}", freeToPlay ? "true" : "false") });
->>>>>>> develop
             return (await Task.Factory.StartNew(() =>
                 JsonConvert.DeserializeObject<ChampionList>(json))).Champions;
         }
@@ -248,13 +235,13 @@ namespace RiotSharp
         public Champion GetChampion(Region region, int championId)
         {
             var json = requester.CreateGetRequest(
-                PlatformRootUrl + ChampionsUrl + string.Format(IdUrl, championId), region);
+                ChampionsUrl + string.Format(IdUrl, championId), region);
             return JsonConvert.DeserializeObject<Champion>(json);
         }
 
         public async Task<Champion> GetChampionAsync(Region region, int championId)
         {
-            var json = await requester.CreateGetRequestAsync(PlatformRootUrl + ChampionsUrl + string.Format(IdUrl, championId), region);
+            var json = await requester.CreateGetRequestAsync(ChampionsUrl + string.Format(IdUrl, championId), region);
             return await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<Champion>(json));
         }
         #endregion
@@ -262,7 +249,7 @@ namespace RiotSharp
         #region Masteries
         public List<MasteryPage> GetMasteryPages(Region region, long summonerId)
         {
-            var json = requester.CreateGetRequest(PlatformRootUrl + string.Format(MasteriesUrl, summonerId), region);
+            var json = requester.CreateGetRequest(string.Format(MasteriesUrl, summonerId), region);
 
             var masteries = JsonConvert.DeserializeObject<MasteryPages>(json);
             return masteries.Pages;
@@ -270,21 +257,30 @@ namespace RiotSharp
 
         public async Task<List<MasteryPage>> GetMasteryPagesAsync(Region region, long summonerId)
         {
-            var json = await requester.CreateGetRequestAsync(PlatformRootUrl + string.Format(MasteriesUrl, summonerId), region);
+            var json = await requester.CreateGetRequestAsync(string.Format(MasteriesUrl, summonerId), region);
 
             return await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<MasteryPages>(json).Pages);
         }
         #endregion
 
         #region Runes
-        public List<RunePage> GetRunePages(Region region, long summonerId)
+        public Dictionary<long, List<RunePage>> GetRunePages(Region region, List<long> summonerIds)
         {
-            var json = requester.CreateGetRequest(PlatformRootUrl + string.Format(RunesUrl, summonerId), region);
-
-            var runes = JsonConvert.DeserializeObject<RunePages>(json);
-            return runes.Pages;
+            var dict = new Dictionary<long, List<RunePage>>();
+            foreach (var grp in MakeGroups(summonerIds, MaxNrRunePages))
+            {
+                var json = requester.CreateGetRequest(
+                    string.Format(RunesRootUrl,
+                        region.ToString()) + string.Format(RunesUrl, Util.BuildIdsString(grp)),
+                    region);
+                var subDict = ConstructRuneDict(JsonConvert.DeserializeObject<Dictionary<string, RunePages>>(json));
+                foreach (var child in subDict)
+                {
+                    dict.Add(child.Key, child.Value);
+                }
+            }
+            return dict;
         }
-<<<<<<< HEAD
 
         public async Task<Dictionary<long, List<RunePage>>> GetRunePagesAsync(Region region, List<long> summonerIds)
         {
@@ -297,14 +293,9 @@ namespace RiotSharp
                         JsonConvert.DeserializeObject<Dictionary<string, RunePages>>(json.Result))
                 )
             ).ToList();
-=======
-   
-        public async Task<List<RunePage>> GetRunePagesAsync(Region region, long summonerId)
-        {
-            var json = await requester.CreateGetRequestAsync(PlatformRootUrl + string.Format(RunesUrl, summonerId), region);
->>>>>>> develop
 
-            return await Task.Factory.StartNew(() => JsonConvert.DeserializeObject<RunePages>(json).Pages);
+            await Task.WhenAll(tasks);
+            return tasks.SelectMany(task => task.Result).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
         #endregion
 

@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
 
-namespace RiotSharp.RunesEndpoint
+namespace RiotSharp.SummonerEndpoint
 {
     /// <summary>
     /// Page of runes (Summoner API).

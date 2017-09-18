@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace RiotSharp.RunesEndpoint
+namespace RiotSharp.SummonerEndpoint
 {
     /// <summary>
     /// Slot for a rune (Summoner API).
